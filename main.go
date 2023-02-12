@@ -14,6 +14,8 @@ var (
 
 	flagPerformanceProfile = flag.String("profile", "", "write performance profile to file")
 	flagVerbose            = flag.Bool("v", false, "enable verbose logging")
+
+	flagHttp = flag.String("http", "", "start http server on given address")
 )
 
 func main() {
@@ -29,8 +31,23 @@ func main() {
 		Since:      *flagSince,
 		Verbose:    *flagVerbose,
 	}
-	if err := runGitStats(config); err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
-		os.Exit(1)
+
+	runMode := "git2csv"
+	if *flagHttp != "" {
+		runMode = "http"
+	}
+
+	switch runMode {
+	case "git2csv":
+		if err := runGitStats(config); err != nil {
+			fmt.Fprintln(os.Stderr, "error:", err)
+			os.Exit(1)
+		}
+	case "http":
+		if err := runHttpServer(*flagHttp, config); err != nil {
+			fmt.Fprintln(os.Stderr, "error:", err)
+		}
+	default:
+		fmt.Fprintln(os.Stderr, "unknown run mode:", runMode)
 	}
 }
