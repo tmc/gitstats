@@ -11,7 +11,7 @@ for analysis.
 Show the top 20 files by number of edits:
 ```sql
 WITH changes as (
-    select count(*) n, Filename from read_csv('git_history.csv', header=True, auto_detect=True) GROUP BY Filename
+    select count(*) n, filename from read_csv('git_history.csv', header=True, auto_detect=True) GROUP BY filename
 )
 select * from changes order by n desc limit 20;
 ```

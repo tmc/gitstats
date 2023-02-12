@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// RunConfig is the configuration for running gitstats
 type RunConfig struct {
 	RepoPath   string
 	OutputFile string
@@ -23,6 +24,9 @@ func runGitStats(config RunConfig) error {
 	gitArgs := []string{"log", "--pretty=format:%H	%ai	%an	%ae	%s", "--numstat"}
 	if config.Since != "" {
 		gitArgs = append(gitArgs, fmt.Sprintf("--since=%s", config.Since))
+	}
+	if config.Verbose {
+		fmt.Printf("Running:\n\tgit %s\n", strings.Join(gitArgs, " "))
 	}
 	cmd := exec.Command("git", gitArgs...)
 	if config.RepoPath == "" {

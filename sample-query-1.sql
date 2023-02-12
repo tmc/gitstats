@@ -8,4 +8,3 @@ WITH ranked_files AS (
 )
 SELECT rank, total_commits, filename
 FROM ranked_files
-WHERE rank <= 20;
