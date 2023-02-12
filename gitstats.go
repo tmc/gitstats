@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"encoding/csv"
-	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -11,37 +10,31 @@ import (
 	"strings"
 )
 
-var (
-	flagRepoPath   = flag.String("repo", "", "path to the git repository")
-	flagAppendMode = flag.Bool("append", false, "append to existing file")
-	flagOutputFile = flag.String("output", "git_history.csv", "output file")
-	flagSince      = flag.String("since", "", "git log `--since` argument")
-)
-
-func main() {
-	flag.Parse()
-	if err := run(*flagRepoPath, *flagAppendMode, *flagOutputFile); err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
-		os.Exit(1)
-	}
+type RunConfig struct {
+	RepoPath   string
+	OutputFile string
+	AppendMode bool
+	Since      string
+	Verbose    bool
 }
 
-// run runs the gitstats command
-func run(repoPath string, appendMode bool, outputFile string) error {
+// runGitStats runs the gitstats command
+func runGitStats(config RunConfig) error {
 	gitArgs := []string{"log", "--pretty=format:%H	%ai	%an	%ae	%s", "--numstat"}
-	if *flagSince != "" {
-		gitArgs = append(gitArgs, fmt.Sprintf("--since=%s", *flagSince))
+	if config.Since != "" {
+		gitArgs = append(gitArgs, fmt.Sprintf("--since=%s", config.Since))
 	}
 	cmd := exec.Command("git", gitArgs...)
-	if repoPath == "" {
+	if config.RepoPath == "" {
 		return fmt.Errorf("repo path is required")
 	}
-	repo := filepath.Base(repoPath)
-	cmd.Dir = repoPath
+	repo := filepath.Base(config.RepoPath)
+	cmd.Dir = config.RepoPath
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
 	}
+	cmd.Stderr = os.Stderr
 
 	if err := cmd.Start(); err != nil {
 		return err
@@ -49,10 +42,10 @@ func run(repoPath string, appendMode bool, outputFile string) error {
 
 	var file *os.File
 	// Open a file for writing the CSV
-	if appendMode {
-		file, err = os.OpenFile(outputFile, os.O_APPEND|os.O_WRONLY, 0600)
+	if config.AppendMode {
+		file, err = os.OpenFile(config.OutputFile, os.O_APPEND|os.O_WRONLY, 0600)
 	} else {
-		file, err = os.Create(outputFile)
+		file, err = os.Create(config.OutputFile)
 	}
 	if err != nil {
 		return err
@@ -61,7 +54,7 @@ func run(repoPath string, appendMode bool, outputFile string) error {
 	cw := csv.NewWriter(file)
 
 	// Write the header to the file (if not in append mode)
-	if !appendMode {
+	if !config.AppendMode {
 		if err := cw.Write([]string{"repo", "sha", "date", "author name", "author email", "subject", "filename", "lines_added", "lines_removed"}); err != nil {
 			return err
 		}
