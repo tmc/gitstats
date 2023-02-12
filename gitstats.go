@@ -15,6 +15,7 @@ var (
 	flagRepoPath   = flag.String("repo", "", "path to the git repository")
 	flagAppendMode = flag.Bool("append", false, "append to existing file")
 	flagOutputFile = flag.String("output", "git_history.csv", "output file")
+	flagSince      = flag.String("since", "", "git log `--since` argument")
 )
 
 func main() {
@@ -27,7 +28,11 @@ func main() {
 
 // run runs the gitstats command
 func run(repoPath string, appendMode bool, outputFile string) error {
-	cmd := exec.Command("git", "log", "--pretty=format:%H	%ad	%an	%ae	%s", "--numstat")
+	gitArgs := []string{"log", "--pretty=format:%H	%ai	%an	%ae	%s", "--numstat"}
+	if *flagSince != "" {
+		gitArgs = append(gitArgs, fmt.Sprintf("--since=%s", *flagSince))
+	}
+	cmd := exec.Command("git", gitArgs...)
 	if repoPath == "" {
 		return fmt.Errorf("repo path is required")
 	}
