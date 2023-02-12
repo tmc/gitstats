@@ -62,7 +62,7 @@ func run(repoPath string, appendMode bool, outputFile string) error {
 
 	// Write the header to the file (if not in append mode)
 	if !appendMode {
-		if err := cw.Write([]string{"Repo", "Hash", "Date", "Author Name", "Author Email", "Subject", "Filename", "Lines Added", "Lines Removed"}); err != nil {
+		if err := cw.Write([]string{"repo", "sha", "date", "author name", "author email", "subject", "filename", "lines_added", "lines_removed"}); err != nil {
 			return err
 		}
 	}
